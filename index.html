@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Watchtime Machine</title>
+    <style>
+        :root {
+            --primary-color: #ff0000;
+            --secondary-color: #282828;
+            --background-color: #0f0f0f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: linear-gradient(45deg, #ff0000, #ff6b6b);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(255,0,0,0.2);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        input, button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"] {
+            background-color: #2d2d2d;
+            color: #ffffff;
+            width: 100%;
+            border: 1px solid #444;
+        }
+
+        input[type="number"] {
+            background-color: #2d2d2d;
+            color: #ffffff;
+            width: 100px;
+            border: 1px solid #444;
+        }
+
+        button {
+            background: linear-gradient(45deg, #ff0000, #ff6b6b);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255,0,0,0.3);
+        }
+
+        button.secondary {
+            background: linear-gradient(45deg, #444, #666);
+        }
+
+        .youtube-link {
+            background: #ff0000;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .youtube-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(255,0,0,0.3);
+        }
+
+        .video-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 25px;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .video-wrapper:hover {
+            transform: translateY(-5px);
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .video-wrapper:hover .remove-btn {
+            opacity: 1;
+        }
+
+        .counter {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .youtube-icon {
+            width: 24px;
+            height: 24px;
+            filter: brightness(0) invert(1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎥 YouTube Watchtime Machine</h1>
+            <p>Automated Multi-Instance Viewing Platform</p>
+        </div>
+
+        <div class="controls">
+            <input type="text" id="videoUrl" placeholder="Enter YouTube URL or video ID...">
+            <input type="number" id="instanceCount" min="1" value="10" title="Number of machines">
+            <button onclick="loadVideo()">🚀 Start Machines</button>
+            <button class="secondary" onclick="removeAllVideos()">⏹️ Stop All</button>
+            <a href="https://youtube.com/channel/UCEQTwqwLF7UplbnkON2U-NQ?si=9DBAgjUKXDdu3dkV" 
+               class="youtube-link" 
+               target="_blank"
+               rel="noopener noreferrer">
+                <img src="https://www.freeiconspng.com/uploads/youtube-logo-png-transparent-image-5.png" 
+                     class="youtube-icon" 
+                     alt="YouTube Channel">
+            </a>
+        </div>
+
+        <div class="video-container" id="videoContainer"></div>
+    </div>
+
+    <script>
+        // ... (keep the previous JavaScript code unchanged) ...
+        function loadVideo() {
+            const videoUrl = document.getElementById('videoUrl').value;
+            const instanceCount = parseInt(document.getElementById('instanceCount').value) || 10;
+            const videoId = getYouTubeId(videoUrl);
+            
+            if (!videoId) {
+                showError('Please enter a valid YouTube URL');
+                return;
+            }
+
+            const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`;
+            
+            for (let i = 0; i < instanceCount; i++) {
+                const videoWrapper = document.createElement('div');
+                videoWrapper.className = 'video-wrapper';
+                
+                const iframe = document.createElement('iframe');
+                iframe.setAttribute('src', embedUrl);
+                iframe.setAttribute('allowfullscreen', 'true');
+                iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '×';
+                removeBtn.onclick = () => videoWrapper.remove();
+                
+                const counter = document.createElement('div');
+                counter.className = 'counter';
+                counter.textContent = `Machine ${i + 1}`;
+                
+                videoWrapper.appendChild(iframe);
+                videoWrapper.appendChild(removeBtn);
+                videoWrapper.appendChild(counter);
+                document.getElementById('videoContainer').appendChild(videoWrapper);
+            }
+            
+            document.getElementById('videoUrl').value = '';
+        }
+
+        function removeAllVideos() {
+            const container = document.getElementById('videoContainer');
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+        }
+
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function showError(message) {
+            const errorEl = document.createElement('div');
+            errorEl.style = `position: fixed; top: 20px; right: 20px; padding: 15px; background: #dc3545; color: white; border-radius: 8px;`;
+            errorEl.textContent = message;
+            document.body.appendChild(errorEl);
+            
+            setTimeout(() => errorEl.remove(), 3000);
+        }
+
+        document.getElementById('videoUrl').addEventListener('keypress', e => e.key === 'Enter' && loadVideo());
+    </script>
+</body>
+</html>
